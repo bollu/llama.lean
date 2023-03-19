@@ -1,0 +1,15 @@
+{"version": 4,
+ "packagesDir": "lake-packages",
+ "packages":
+ [{"git":
+   {"url": "https://github.com/tydeu/lean4-alloy.git",
+    "subDir?": null,
+    "rev": "334407dc09c10c84549242dc73f9d364886267d1",
+    "name": "Alloy",
+    "inputRev?": "334407"}},
+  {"git":
+   {"url": "https://github.com/mhuisi/lean4-cli.git",
+    "subDir?": null,
+    "rev": "5a858c32963b6b19be0d477a30a1f4b6c120be7e",
+    "name": "Cli",
+    "inputRev?": "nightly"}}]}
