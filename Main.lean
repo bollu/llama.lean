@@ -29,7 +29,7 @@ inductive type
 | f32
 | count
 
-def type.marshal : type -> Int
+def type.marshal : type -> USize
 | .i8 => 0
 | .i16 => 1
 | .i32 => 2
@@ -117,7 +117,7 @@ inductive op
 | count
 
 
-def op.marshal : op -> Int
+def op.marshal : op -> USize
 | none => 0
 | dup => 1
 | add => 2
@@ -153,9 +153,26 @@ def op.marshal : op -> Int
 | flash_ff => 32
 | count => 33
 
+structure Context where
+  private mk :: ptr : USize
+instance : Nonempty Context := ⟨{ ptr := default }⟩
+
+-- must use same context everyhere
+structure Tensor (ctx: Context) where
+  private mk :: ptr : USize
+deriving Inhabited
+
+structure Cgraph (ctx : Context) where
+  private mk :: ptr : USize 
+deriving Inhabited
+
 -- functions to be bound in GGML:
 -- master ~/papers/llama/llama.cpp> rg "ggml_[a-zA-Z0-9_]*\(" main.cpp -o --no-line-number | sort | uniq
 -- ggml_add(
+
+@[extern "lean_ggml_add"]
+opaque ggml_add (a : Tensor ctx) (b : Tensor ctx) : BaseIO (Tensor ctx)
+
 -- ggml_blck_size(
 -- ggml_build_forward_expand(
 -- ggml_cpu_has_arm_fma(
@@ -178,12 +195,27 @@ def op.marshal : op -> Int
 -- ggml_get_rows(
 -- ggml_graph_dump_dot(
 -- ggml_init(
+@[extern "lean_ggml_init"]
+opaque ggml_init (size : USize) : BaseIO (Context)
+
+@[extern "lean_ggml_free"]
+opaque ggml_free (ctx : Context) : BaseIO (Unit)
+
+@[extern "lean_ggml_print_objects"]
+opaque ggml_print_objects (ctx : Context) : BaseIO (Unit)
+
 -- ggml_mul(
 -- ggml_mul_mat(
 -- ggml_nbytes(
 -- ggml_nelements(
 -- ggml_new_f32(
 -- ggml_new_tensor_1d(
+@[extern "lean_ggml_new_tensor_1d"]
+opaque ggml_new_tensor_1d_ (ctx : Context) (type : USize) (nelem : USize) : BaseIO (Tensor ctx) 
+
+def ggml_new_tensor_1d (ctx: Context) (t : type) (nelem : USize) : BaseIO (Tensor ctx) := 
+  ggml_new_tensor_1d_ ctx t.marshal nelem
+
 -- ggml_new_tensor_2d(
 -- ggml_new_tensor_3d(
 -- ggml_permute(
@@ -200,6 +232,8 @@ def op.marshal : op -> Int
 -- ggml_type_sizef(
 -- ggml_used_mem(
 -- ggml_view_1d(
+
+
 
 end ggml
 
@@ -341,8 +375,12 @@ def llama : Cmd := `[Cli|
 
 ]
 
-
-def main (args : List String) : IO UInt32 :=
-  llama.validate args
-
+open ggml in 
+def main (args : List String) : IO UInt32 := do
+  -- llama.validate args
+  let ctx <- ggml_init (1024 * 1024 * 1024)
+  let t0 <- ggml_new_tensor_1d ctx type.i32 10
+  ggml_print_objects ctx
+  ggml_free ctx
+  return 0
 end Main

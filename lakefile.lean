@@ -33,9 +33,11 @@ extern_lib «ggml» (pkg : Package) := do
 
 extern_lib «ggml-ffi» (pkg : Package) := do
   -- see also: https://github.com/yatima-inc/RustFFI.lean/blob/2a397cbc0904e2d575862c4067b512b6cc6b65f8/lakefile.lean
-  let oFileName := "ggmlffi.c"
+  let srcFileName := "ggmlffi.c"
   let oFilePath := pkg.oleanDir / "libggmlffi.o"
-  let srcJob ← inputFile oFileName
+  let srcJob ← inputFile srcFileName
   buildFileAfterDep oFilePath srcJob fun srcFile => do
-    let flags := #["-I", (← getLeanIncludeDir).toString]
-    compileO oFileName oFilePath srcFile flags -- build static archive
+    let flags := #["-I", (← getLeanIncludeDir).toString, 
+                   "-I", (pkg.dir / "ggml" / "include").toString,
+                   "-fPIC"]
+    compileO srcFileName oFilePath srcFile flags -- build static archive
