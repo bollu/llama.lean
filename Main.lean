@@ -6,6 +6,10 @@ import Std
 open Cli
 open Std
 
+section Util
+
+section GGML
+end GGML
 
 open Lean in
 def String.toFloat? (s: String) : Option Float :=
@@ -82,6 +86,11 @@ def gptvocab.sample_top_k (vocab: gptvocab)
   (logitsId : Array (Float × gptvocab.id))
   -- (topK: Nat)
   : LlamaM gptvocab.id := sorry 
+end Util
+
+
+section Main 
+
 
 -- https://github.com/ggerganov/llama.cpp/blob/da5303c1ea68aa19db829c634f1e10d08d409680/utils.cpp#L18
 def runLlama (p : Parsed) : IO UInt32 := do
@@ -140,3 +149,5 @@ def llama : Cmd := `[Cli|
 
 def main (args : List String) : IO UInt32 :=
   llama.validate args
+
+end Main
