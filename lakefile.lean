@@ -26,6 +26,7 @@ extern_lib «ggml» (pkg : Package) := do
   proc { cmd := "cmake", args := #["--build", "src/"], cwd := ggmlBuildDir }
   -- copy library
   let tgtPath := pkg.libDir / "libggml.a"
+  IO.FS.createDirAll pkg.libDir
   IO.FS.writeBinFile tgtPath (← IO.FS.readBinFile (ggmlBuildDir / "src" / "libggml.a"))
   -- give library to lake
   pure (BuildJob.pure tgtPath)
