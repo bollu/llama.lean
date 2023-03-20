@@ -153,328 +153,56 @@ def op.marshal : op -> Int
 | flash_ff => 32
 | count => 33
 
+-- functions to be bound in GGML:
+-- master ~/papers/llama/llama.cpp> rg "ggml_[a-zA-Z0-9_]*\(" main.cpp -o --no-line-number | sort | uniq
+-- ggml_add(
+-- ggml_blck_size(
+-- ggml_build_forward_expand(
+-- ggml_cpu_has_arm_fma(
+-- ggml_cpu_has_avx(
+-- ggml_cpu_has_avx2(
+-- ggml_cpu_has_avx512(
+-- ggml_cpu_has_blas(
+-- ggml_cpu_has_f16c(
+-- ggml_cpu_has_fma(
+-- ggml_cpu_has_fp16_va(
+-- ggml_cpu_has_neon(
+-- ggml_cpu_has_sse3(
+-- ggml_cpu_has_vsx(
+-- ggml_cpu_has_wasm_simd(
+-- ggml_cpy(
+-- ggml_diag_mask_inf(
+-- ggml_element_size(
+-- ggml_free(
+-- ggml_get_data(
+-- ggml_get_rows(
+-- ggml_graph_dump_dot(
+-- ggml_init(
+-- ggml_mul(
+-- ggml_mul_mat(
+-- ggml_nbytes(
+-- ggml_nelements(
+-- ggml_new_f32(
+-- ggml_new_tensor_1d(
+-- ggml_new_tensor_2d(
+-- ggml_new_tensor_3d(
+-- ggml_permute(
+-- ggml_repeat(
+-- ggml_reshape_3d(
+-- ggml_rms_norm(
+-- ggml_rope(
+-- ggml_scale(
+-- ggml_silu(
+-- ggml_soft_max(
+-- ggml_time_init(
+-- ggml_time_us(
+-- ggml_type_size(
+-- ggml_type_sizef(
+-- ggml_used_mem(
+-- ggml_view_1d(
+
 end ggml
 
--- void    ggml_time_init(void); // call this once at the beginning of the program
--- int64_t ggml_time_ms(void);
--- int64_t ggml_time_us(void);
--- int64_t ggml_cycles(void);
--- int64_t ggml_cycles_per_ms(void);
-
--- void ggml_print_object (const struct ggml_object * obj);
--- void ggml_print_objects(const struct ggml_context * ctx);
-
--- int    ggml_nelements(const struct ggml_tensor * tensor);
--- size_t ggml_nbytes   (const struct ggml_tensor * tensor);
-
--- size_t ggml_type_size   (enum ggml_type type);
--- size_t ggml_element_size(const struct ggml_tensor * tensor);
-
--- struct ggml_context * ggml_init(struct ggml_init_params params);
--- void ggml_free(struct ggml_context * ctx);
-
--- size_t ggml_used_mem(const struct ggml_context * ctx);
-
--- size_t ggml_set_scratch(struct ggml_context * ctx, struct ggml_scratch scratch);
-
--- struct ggml_tensor * ggml_new_tensor(
---         struct ggml_context * ctx,
---         enum   ggml_type type,
---         int    n_dims,
---         const int *ne);
-
--- struct ggml_tensor * ggml_new_tensor_1d(
---         struct ggml_context * ctx,
---         enum   ggml_type type,
---         int    ne0);
-
--- struct ggml_tensor * ggml_new_tensor_2d(
---         struct ggml_context * ctx,
---         enum   ggml_type type,
---         int    ne0,
---         int    ne1);
-
--- struct ggml_tensor * ggml_new_tensor_3d(
---         struct ggml_context * ctx,
---         enum   ggml_type type,
---         int    ne0,
---         int    ne1,
---         int    ne2);
-
--- struct ggml_tensor * ggml_new_tensor_4d(
---         struct ggml_context * ctx,
---         enum   ggml_type type,
---         int    ne0,
---         int    ne1,
---         int    ne2,
---         int    ne3);
-
--- struct ggml_tensor * ggml_new_i32(struct ggml_context * ctx, int32_t value);
--- struct ggml_tensor * ggml_new_f32(struct ggml_context * ctx, float value);
-
--- struct ggml_tensor * ggml_dup_tensor (struct ggml_context * ctx, const struct ggml_tensor * src);
--- struct ggml_tensor * ggml_view_tensor(struct ggml_context * ctx, const struct ggml_tensor * src);
-
--- struct ggml_tensor * ggml_set_zero(struct ggml_tensor * tensor);
--- struct ggml_tensor * ggml_set_i32 (struct ggml_tensor * tensor, int32_t value);
--- struct ggml_tensor * ggml_set_f32 (struct ggml_tensor * tensor, float value);
-
--- int32_t ggml_get_i32_1d(const struct ggml_tensor * tensor, int i);
--- void    ggml_set_i32_1d(const struct ggml_tensor * tensor, int i, int32_t value);
-
--- float ggml_get_f32_1d(const struct ggml_tensor * tensor, int i);
--- void  ggml_set_f32_1d(const struct ggml_tensor * tensor, int i, float value);
-
---  void * ggml_get_data    (const struct ggml_tensor * tensor);
--- float * ggml_get_data_f32(const struct ggml_tensor * tensor);
-
--- //
--- // operations on tensors with backpropagation
--- //
-
--- struct ggml_tensor * ggml_dup(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a);
-
--- struct ggml_tensor * ggml_add(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a,
---         struct ggml_tensor  * b);
-
--- struct ggml_tensor * ggml_sub(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a,
---         struct ggml_tensor  * b);
-
--- struct ggml_tensor * ggml_mul(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a,
---         struct ggml_tensor  * b);
-
--- struct ggml_tensor * ggml_div(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a,
---         struct ggml_tensor  * b);
-
--- struct ggml_tensor * ggml_sqr(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a);
-
--- struct ggml_tensor * ggml_sqrt(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a);
-
--- // return scalar
--- // TODO: compute sum along rows
--- struct ggml_tensor * ggml_sum(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a);
-
--- // mean along rows
--- struct ggml_tensor * ggml_mean(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a);
-
--- // if a is the same shape as b, and a is not parameter, return a
--- // otherwise, return a new tensor: repeat(a) to fit in b
--- struct ggml_tensor * ggml_repeat(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a,
---         struct ggml_tensor  * b);
-
--- struct ggml_tensor * ggml_abs(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a);
-
--- struct ggml_tensor * ggml_sgn(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a);
-
--- struct ggml_tensor * ggml_neg(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a);
-
--- struct ggml_tensor * ggml_step(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a);
-
--- struct ggml_tensor * ggml_relu(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a);
-
--- // TODO: double-check this computation is correct
--- struct ggml_tensor * ggml_gelu(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a);
-
--- // normalize along rows
--- // TODO: eps is hardcoded to 1e-5 for now
--- struct ggml_tensor * ggml_norm(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a);
-
--- // A: m rows, n columns
--- // B: p rows, n columns (i.e. we transpose it internally)
--- // result is m columns, p rows
--- struct ggml_tensor * ggml_mul_mat(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a,
---         struct ggml_tensor  * b);
-
--- //
--- // operations on tensors without backpropagation
--- //
-
--- // in-place, returns view(a)
--- struct ggml_tensor * ggml_scale(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a,
---         struct ggml_tensor  * b);
-
--- // a -> b, return view(b)
--- struct ggml_tensor * ggml_cpy(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a,
---         struct ggml_tensor  * b);
-
--- // return view(a), b specifies the new shape
--- // TODO: when we start computing gradient, make a copy instead of view
--- struct ggml_tensor * ggml_reshape(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a,
---         struct ggml_tensor  * b);
-
--- // return view(a)
--- // TODO: when we start computing gradient, make a copy instead of view
--- struct ggml_tensor * ggml_reshape_2d(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a,
---         int                   ne0,
---         int                   ne1);
-
--- // return view(a)
--- // TODO: when we start computing gradient, make a copy instead of view
--- struct ggml_tensor * ggml_reshape_3d(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a,
---         int                   ne0,
---         int                   ne1,
---         int                   ne2);
-
--- // offset in bytes
--- struct ggml_tensor * ggml_view_1d(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a,
---         int                   ne0,
---         size_t                offset);
-
--- struct ggml_tensor * ggml_view_2d(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a,
---         int                   ne0,
---         int                   ne1,
---         size_t                nb1, // row stride in bytes
---         size_t                offset);
-
--- struct ggml_tensor * ggml_permute(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a,
---         int                   axis0,
---         int                   axis1,
---         int                   axis2,
---         int                   axis3);
-
--- // alias for ggml_permute(ctx, a, 1, 0, 2, 3)
--- struct ggml_tensor * ggml_transpose(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a);
-
--- struct ggml_tensor * ggml_get_rows(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a,
---         struct ggml_tensor  * b);
-
--- // set elements above the diagonal to -INF
--- // in-place, returns view(a)
--- struct ggml_tensor * ggml_diag_mask_inf(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a,
---         int                   n_past);
-
--- // in-place, returns view(a)
--- struct ggml_tensor * ggml_soft_max(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a);
-
--- // rotary position embedding
--- // in-place, returns view(a)
--- // if mode == 1, skip n_past elements
--- // TODO: avoid creating a new tensor every time
--- struct ggml_tensor * ggml_rope(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a,
---         int                   n_past,
---         int                   n_dims,
---         int                   mode);
-
--- // padding = 1
--- // TODO: we don't support extra parameters for now
--- //       that's why we are hard-coding the stride, padding, and dilation
--- //       not great ..
--- struct ggml_tensor * ggml_conv_1d_1s(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a,
---         struct ggml_tensor  * b);
-
--- struct ggml_tensor * ggml_conv_1d_2s(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a,
---         struct ggml_tensor  * b);
-
--- struct ggml_tensor * ggml_flash_attn(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * q,
---         struct ggml_tensor  * k,
---         struct ggml_tensor  * v,
---         bool                  masked);
-
--- struct ggml_tensor * ggml_flash_ff(
---         struct ggml_context * ctx,
---         struct ggml_tensor  * a,
---         struct ggml_tensor  * b0,
---         struct ggml_tensor  * b1,
---         struct ggml_tensor  * c0,
---         struct ggml_tensor  * c1);
-
--- //
--- // automatic differentiation
--- //
-
--- void ggml_set_param(
---         struct ggml_context * ctx,
---         struct ggml_tensor * tensor);
-
--- void ggml_build_forward_expand(struct ggml_cgraph * cgraph, struct ggml_tensor * tensor);
-
--- struct ggml_cgraph ggml_build_forward (struct ggml_tensor * tensor);
--- struct ggml_cgraph ggml_build_backward(struct ggml_context * ctx, struct ggml_cgraph * gf, bool keep);
-
--- void ggml_graph_compute(struct ggml_context * ctx, struct ggml_cgraph * cgraph);
--- void ggml_graph_reset  (struct ggml_cgraph * cgraph);
-
--- // print info and performance information for the graph
--- void ggml_graph_print(const struct ggml_cgraph * cgraph);
-
--- // dump the graph into a file using the dot format
--- void ggml_graph_dump_dot(const struct ggml_cgraph * gb, const struct ggml_cgraph * gf, const char * filename);
-
--- struct ggml_opt_params ggml_opt_default_params(enum ggml_opt_type type);
-
--- // optimize the function defined by the tensor f
--- enum ggml_opt_result ggml_opt(
---         struct ggml_context * ctx,
---         struct ggml_opt_params params,
---         struct ggml_tensor * f);
 
 
 
