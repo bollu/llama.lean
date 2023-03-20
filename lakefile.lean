@@ -30,3 +30,12 @@ extern_lib «ggml» (pkg : Package) := do
   IO.FS.writeBinFile tgtPath (← IO.FS.readBinFile (ggmlBuildDir / "src" / "libggml.a"))
   -- give library to lake
   pure (BuildJob.pure tgtPath)
+
+extern_lib «ggml-ffi» (pkg : Package) := do
+  -- see also: https://github.com/yatima-inc/RustFFI.lean/blob/2a397cbc0904e2d575862c4067b512b6cc6b65f8/lakefile.lean
+  let oFileName := "ggmlffi.c"
+  let oFilePath := pkg.oleanDir / "libggmlffi.o"
+  let srcJob ← inputFile oFileName
+  buildFileAfterDep oFilePath srcJob fun srcFile => do
+    let flags := #["-I", (← getLeanIncludeDir).toString]
+    compileO oFileName oFilePath srcFile flags -- build static archive
