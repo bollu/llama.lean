@@ -8,8 +8,152 @@ open Std
 
 section Util
 
-section GGML
-end GGML
+
+namespace ggml
+-- bindings to the GGML library
+
+-- enum ggml_type {
+--     GGML_TYPE_I8,
+--     GGML_TYPE_I16,
+--     GGML_TYPE_I32,
+--     GGML_TYPE_F16,
+--     GGML_TYPE_F32,
+--     GGML_TYPE_COUNT,
+-- };
+
+inductive type
+| i8
+| i16
+| i32
+| f16
+| f32
+| count
+
+def type.marshal : type -> Int
+| .i8 => 0
+| .i16 => 1
+| .i32 => 2
+| .f16 => 3
+| .f32 => 4
+| .count => 5
+
+-- // available tensor operations:
+-- enum ggml_op {
+--     GGML_OP_NONE = 0,
+-- 
+--     GGML_OP_DUP,
+--     GGML_OP_ADD,
+--     GGML_OP_SUB,
+--     GGML_OP_MUL,
+--     GGML_OP_DIV,
+--     GGML_OP_SQR,
+--     GGML_OP_SQRT,
+--     GGML_OP_SUM,
+--     GGML_OP_MEAN,
+--     GGML_OP_REPEAT,
+--     GGML_OP_ABS,
+--     GGML_OP_SGN,
+--     GGML_OP_NEG,
+--     GGML_OP_STEP,
+--     GGML_OP_RELU,
+--     GGML_OP_GELU,
+--     GGML_OP_NORM, // normalize
+-- 
+--     GGML_OP_MUL_MAT,
+-- 
+--     GGML_OP_SCALE,
+--     GGML_OP_CPY,
+--     GGML_OP_RESHAPE,
+--     GGML_OP_VIEW,
+--     GGML_OP_PERMUTE,
+--     GGML_OP_TRANSPOSE,
+--     GGML_OP_GET_ROWS,
+--     GGML_OP_DIAG_MASK_INF,
+--     GGML_OP_SOFT_MAX,
+--     GGML_OP_ROPE,
+--     GGML_OP_CONV_1D_1S,
+--     GGML_OP_CONV_1D_2S,
+-- 
+--     GGML_OP_FLASH_ATTN,
+--     GGML_OP_FLASH_FF,
+-- 
+--     GGML_OP_COUNT,
+-- };
+
+inductive op
+| none
+| dup
+| add
+| sub
+| mul
+| div
+| sqr
+| sqrt
+| sum
+| mean
+| repeat_
+| abs
+| sgn
+| neg
+| step
+| relu
+| gelu
+| norm -- NORMALIZE
+| mul_mat
+| scale
+| cpy
+| reshape
+| view
+| permute
+| transpose
+| get_rows
+| diag_mask_inf
+| soft_max
+| rope
+| conv_1d_1s
+| conv_1d_2s
+| flash_attn
+| flash_ff
+| count
+
+
+def op.marshal : op -> Int
+| none => 0
+| dup => 1
+| add => 2
+| sub => 3
+| mul => 4
+| div => 5
+| sqr => 6
+| sqrt => 7
+| sum => 8
+| mean => 9
+| repeat_ => 10 -- TODO: why is 'repeat' taken?
+| abs => 11
+| sgn => 12
+| neg => 13
+| step => 14
+| relu => 15
+| gelu => 16
+| norm => 17 -- NORMALIZE
+| mul_mat => 18
+| scale => 19
+| cpy => 20
+| reshape => 21
+| view => 22
+| permute => 23
+| transpose => 24
+| get_rows => 25
+| diag_mask_inf => 26
+| soft_max => 27
+| rope => 28
+| conv_1d_1s => 29
+| conv_1d_2s => 30
+| flash_attn => 31
+| flash_ff => 32
+| count => 33
+
+end ggml
 
 open Lean in
 def String.toFloat? (s: String) : Option Float :=
