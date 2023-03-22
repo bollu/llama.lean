@@ -175,6 +175,7 @@ opaque ggml_add (a : Tensor ctx) (b : Tensor ctx) : BaseIO (Tensor ctx)
 
 -- ggml_blck_size(
 -- ggml_build_forward_expand(
+opaque ggml_build_forward_expand (graph : Cgraph ctx) (tensor : Tensor ctx)  : BaseIO Unit 
 -- ggml_cpu_has_arm_fma(
 -- ggml_cpu_has_avx(
 -- ggml_cpu_has_avx2(
@@ -188,16 +189,30 @@ opaque ggml_add (a : Tensor ctx) (b : Tensor ctx) : BaseIO (Tensor ctx)
 -- ggml_cpu_has_vsx(
 -- ggml_cpu_has_wasm_simd(
 -- ggml_cpy(
+opaque ggml_copy (a b : Tensor ctx) : BaseIO (Tensor ctx)
+
+-- set elements above the diagonal to -INF
+-- in-place, returns view(a).
 -- ggml_diag_mask_inf(
+opaque ggml_diag_mask_inf (a : Tensor ctx) (n_past : Int32) : BaseIO (Tensor ctx)
+
 -- ggml_element_size(
--- ggml_free(
+opaque ggml_element_size (a : Tensor ctx) : BaseIO UInt64
+
+
+-- void pointer?
 -- ggml_get_data(
+-- opaque ggml_get_data (a : Tensor ctx) : BaseIO VoidPtr 
+
 -- ggml_get_rows(
+opaque ggml_get_rows (a b : Tensor ctx) : Tensor ctx
+
 -- ggml_graph_dump_dot(
 -- ggml_init(
 @[extern "lean_ggml_init"]
 opaque ggml_init (size : USize) : BaseIO (Context)
 
+-- ggml_free(
 @[extern "lean_ggml_free"]
 opaque ggml_free (ctx : Context) : BaseIO (Unit)
 
@@ -205,35 +220,88 @@ opaque ggml_free (ctx : Context) : BaseIO (Unit)
 opaque ggml_print_objects (ctx : Context) : BaseIO (Unit)
 
 -- ggml_mul(
+opaque ggml_mul (a b : Tensor ctx) : BaseIO (Tensor ctx)
+
 -- ggml_mul_mat(
+opaque ggml_mul_mat (a b : Tensor ctx) : BaseIO (Tensor ctx) 
+
 -- ggml_nbytes(
+  opaque ggml_nbytes (a : Tensor ctx) : BaseIO (UInt64)
+
 -- ggml_nelements(
+opaque ggml_nelements (a : Tensor ctx) : BaseIO Int
+
 -- ggml_new_f32(
+opaque ggml_new_f32 (ctx : Context) (value : Float) : BaseIO (Tensor ctx) 
+
 -- ggml_new_tensor_1d(
 @[extern "lean_ggml_new_tensor_1d"]
-opaque ggml_new_tensor_1d_ (ctx : Context) (type : USize) (nelem : USize) : BaseIO (Tensor ctx) 
+opaque ggml_new_tensor_1d_ (ctx : Context) (type : USize) (ne0 : USize) : BaseIO (Tensor ctx) 
 
-def ggml_new_tensor_1d (ctx: Context) (t : type) (nelem : USize) : BaseIO (Tensor ctx) := 
-  ggml_new_tensor_1d_ ctx t.marshal nelem
+def ggml_new_tensor_1d (ctx: Context) (t : type) (ne0 : USize) : BaseIO (Tensor ctx) := 
+  ggml_new_tensor_1d_ ctx t.marshal ne0
 
 -- ggml_new_tensor_2d(
+@[extern "lean_ggml_new_tensor_2d"]
+opaque ggml_new_tensor_2d_ (ctx : Context) (type : USize) (ne0 ne1 : USize) : BaseIO (Tensor ctx) 
+
+def ggml_new_tensor_2d (ctx: Context) (t : type) (ne0 ne1 : USize) : BaseIO (Tensor ctx) := 
+  ggml_new_tensor_2d_ ctx t.marshal ne0 ne1
+
 -- ggml_new_tensor_3d(
+@[extern "lean_ggml_new_tensor_3d"]
+opaque ggml_new_tensor_3d_ (ctx : Context) (type : USize) (ne0 ne1 ne2 : USize) : BaseIO (Tensor ctx) 
+
+def ggml_new_tensor_3d (ctx: Context) (t : type) (ne0 ne1 ne2 : USize) : BaseIO (Tensor ctx) := 
+  ggml_new_tensor_3d_ ctx t.marshal ne0 ne1 ne2
+
+-- TODO: what does this actually do?
 -- ggml_permute(
+opaque ggml_permute (a : Tensor ctx) (ax0 ax1 ax2 ax3 : Int) : BaseIO (Tensor ctx)
+
+-- if a is the same shape as b, and a is not parameter, return a
+-- otherwise, return a new tensor: repeat(a) to fit in b
 -- ggml_repeat(
+opaque ggml_repeat (a b : Tensor ctx) : BaseIO (Tensor ctx)
+
+-- review view(a)
 -- ggml_reshape_3d(
+opaque ggml_reshape_3d (a : Tensor ctx) (ne0 ne1 ne2 : Int)  : BaseIO (Tensor ctx)
+
+-- TODO: where is this from
 -- ggml_rms_norm(
+
+-- rotary position embedding
 -- ggml_rope(
+opaque ggml_rope (a : Tensor ctx) (npast ndims mode : Int) : BaseIO (Tensor ctx)
+
 -- ggml_scale(
+opaque ggml_scale (a b : Tensor ctx) : BaseIO (Tensor ctx)
+
+-- TODO: what is silu? [OK, it's x ↦ xσ(x)]
 -- ggml_silu(
+
 -- ggml_soft_max(
+opaque ggml_soft_max (a : Tensor ctx) : BaseIO (Tensor ctx) 
+
 -- ggml_time_init(
+opaque ggml_time_init : BaseIO Unit 
+
 -- ggml_time_us(
+opaque ggml_time_us : BaseIO Int 
+
+-- TODO: what is this? I guess, returns the #bytes.
 -- ggml_type_size(
+opaque ggml_type_size (t : ty) : BaseIO Int 
+
+-- TODO: what is this?
 -- ggml_type_sizef(
+
 -- ggml_used_mem(
+opaque ggml_used_mem (ctx: Context): BaseIO Int
+
 -- ggml_view_1d(
-
-
+opaque ggml_view_1d (t : Tensor ctx) (ne0 : Int): BaseIO (Tensor ctx)
 
 end ggml
 

@@ -29,7 +29,8 @@ lean_object *lean_ggml_free(size_t ctx, lean_object * /* w */) {
 
 // -- Tensor functions --
 lean_object *lean_ggml_new_tensor_1d (size_t ctx, size_t type, size_t nelem, lean_object * /* w */) {
-	struct ggml_tensor *out = ggml_new_tensor_1d(ctx, type, nelem);
+	struct ggml_tensor *out = ggml_new_tensor_1d((struct ggml_context*)ctx, 
+								type, nelem);
     return lean_io_result_mk_ok(lean_box_usize((size_t)(out)));
 }
 
@@ -42,3 +43,16 @@ lean_object *lean_ggml_add(
     return lean_io_result_mk_ok(lean_box_usize((size_t)(out)));
 };
 
+lean_object *lean_ggml_new_tensor_2d (size_t ctx,
+				size_t type, size_t ne0, size_t ne1, lean_object * /* w */) {
+	struct ggml_tensor *out = ggml_new_tensor_2d((struct ggml_context*)ctx, 
+								type, ne0, ne1);
+    return lean_io_result_mk_ok(lean_box_usize((size_t)(out)));
+}
+
+lean_object *lean_ggml_new_tensor_3d (size_t ctx,
+				size_t type, size_t ne0, size_t ne1, size_t ne2, lean_object * /* w */) {
+	struct ggml_tensor *out = ggml_new_tensor_3d((struct ggml_context*)ctx,
+								type, ne0, ne1, ne2);
+    return lean_io_result_mk_ok(lean_box_usize((size_t)(out)));
+}
