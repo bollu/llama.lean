@@ -98,7 +98,9 @@ inductive op
 | step
 | relu
 | gelu
+| silu
 | norm -- NORMALIZE
+| rms_norm
 | mul_mat
 | scale
 | cpy
@@ -135,23 +137,25 @@ def op.marshal : op -> USize
 | step => 14
 | relu => 15
 | gelu => 16
-| norm => 17 -- NORMALIZE
-| mul_mat => 18
-| scale => 19
-| cpy => 20
-| reshape => 21
-| view => 22
-| permute => 23
-| transpose => 24
-| get_rows => 25
-| diag_mask_inf => 26
-| soft_max => 27
-| rope => 28
-| conv_1d_1s => 29
-| conv_1d_2s => 30
-| flash_attn => 31
-| flash_ff => 32
-| count => 33
+| silu => 17
+| norm => 18 -- NORMALIZE
+| rms_norm => 19
+| mul_mat => 20
+| scale => 21
+| cpy => 22
+| reshape => 23
+| view => 24
+| permute => 25
+| transpose => 26
+| get_rows => 27
+| diag_mask_inf => 28
+| soft_max => 29
+| rope => 30
+| conv_1d_1s => 31
+| conv_1d_2s => 32
+| flash_attn => 33
+| flash_ff => 34
+| count => 35
 
 structure Context where
   private mk :: ptr : USize
@@ -168,8 +172,6 @@ deriving Inhabited
 
 -- functions to be bound in GGML:
 -- master ~/papers/llama/llama.cpp> rg "ggml_[a-zA-Z0-9_]*\(" main.cpp -o --no-line-number | sort | uniq
--- ggml_add(
-
 @[extern "lean_ggml_add"]
 opaque ggml_add (a : Tensor ctx) (b : Tensor ctx) : BaseIO (Tensor ctx)
 
