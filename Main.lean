@@ -176,6 +176,8 @@ deriving Inhabited
 opaque ggml_add (a : Tensor ctx) (b : Tensor ctx) : BaseIO (Tensor ctx)
 
 -- ggml_blck_size(
+opaque ggml_blck_size (t : type) : BaseIO Int
+
 -- ggml_build_forward_expand(
 opaque ggml_build_forward_expand (graph : Cgraph ctx) (tensor : Tensor ctx)  : BaseIO Unit 
 -- ggml_cpu_has_arm_fma(
@@ -191,7 +193,7 @@ opaque ggml_build_forward_expand (graph : Cgraph ctx) (tensor : Tensor ctx)  : B
 -- ggml_cpu_has_vsx(
 -- ggml_cpu_has_wasm_simd(
 -- ggml_cpy(
-opaque ggml_copy (a b : Tensor ctx) : BaseIO (Tensor ctx)
+opaque ggml_cpy (a b : Tensor ctx) : BaseIO (Tensor ctx)
 
 -- set elements above the diagonal to -INF
 -- in-place, returns view(a).
@@ -271,7 +273,7 @@ opaque ggml_repeat (a b : Tensor ctx) : BaseIO (Tensor ctx)
 opaque ggml_reshape_3d (a : Tensor ctx) (ne0 ne1 ne2 : Int)  : BaseIO (Tensor ctx)
 
 -- TODO: where is this from
--- ggml_rms_norm(
+opaque ggml_rms_norm (a : Tensor ctx) : BaseIO (Tensor ctx)
 
 -- rotary position embedding
 -- ggml_rope(
@@ -281,7 +283,7 @@ opaque ggml_rope (a : Tensor ctx) (npast ndims mode : Int) : BaseIO (Tensor ctx)
 opaque ggml_scale (a b : Tensor ctx) : BaseIO (Tensor ctx)
 
 -- TODO: what is silu? [OK, it's x ↦ xσ(x)]
--- ggml_silu(
+opaque ggml_silu (a : Tensor ctx) : BaseIO (Tensor ctx)
 
 -- ggml_soft_max(
 opaque ggml_soft_max (a : Tensor ctx) : BaseIO (Tensor ctx) 
@@ -292,12 +294,12 @@ opaque ggml_time_init : BaseIO Unit
 -- ggml_time_us(
 opaque ggml_time_us : BaseIO Int 
 
--- TODO: what is this? I guess, returns the #bytes.
+-- size in bytes for all elements in a block.
 -- ggml_type_size(
 opaque ggml_type_size (t : ty) : BaseIO Int 
 
--- TODO: what is this?
--- ggml_type_sizef(
+-- return number of bytes as float
+opaque ggml_type_sizef(t : ty) : BaseIO Float
 
 -- ggml_used_mem(
 opaque ggml_used_mem (ctx: Context): BaseIO Int
