@@ -5,7 +5,7 @@ require Cli from git "https://github.com/mhuisi/lean4-cli.git"@"nightly"
 require Std from git "https://github.com/leanprover/std4"@"529a6"
 package «llama» {
   -- add package configuration options here
-  extraDepTargets := #["ggmlffi-shim"]
+  extraDepTargets := #["ggmlffi-shim", "ggml"]
   moreLinkArgs := #["-L./build/lib/", "-lggmlffishim", "-lggml"]
 }
 
