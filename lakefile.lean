@@ -1,6 +1,8 @@
 import Lake
 open Lake DSL
 
+
+
 require Cli from git "https://github.com/mhuisi/lean4-cli.git"@"nightly"
 require Std from git "https://github.com/leanprover/std4"@"529a6"
 package «llama» {
@@ -16,6 +18,7 @@ lean_lib «Llama» {
 @[default_target]
 lean_exe «llama» {
   root := `Main
+  supportInterpreter := true
 }
 
 target «ggmlffi» (pkg : Package) : FilePath := do
@@ -52,3 +55,6 @@ target «ggml» (pkg : Package) : FilePath := do
   pure (BuildJob.pure tgtPath)
   -- let outPath := pkg.libDir / "libggmlplusffi.a"
   -- buildStaticLib outPath #[ggmlO, BuildJob.pure tgtPath]
+
+meta if get_config? env = some "dev" then -- dev is so not everyone has to build it
+  require «doc-gen4» from git "https://github.com/leanprover/doc-gen4" @ "main"

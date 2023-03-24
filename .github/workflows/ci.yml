@@ -31,9 +31,10 @@ jobs:
         run: |
           lake build
 
-      - name: Generate docs 📜
-        run: |
-          ./docgen.sh
+      # - name: Generate docs 📜
+      #   run: |
+      #    ./docgen.sh
+      
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
