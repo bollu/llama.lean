@@ -1,7 +1,7 @@
 import «Llama»
 import Cli
 import Lean
-import Std 
+import Std
 
 open Cli
 open Std
@@ -40,7 +40,7 @@ def type.marshal : type -> USize
 -- // available tensor operations:
 -- enum ggml_op {
 --     GGML_OP_NONE = 0,
--- 
+--
 --     GGML_OP_DUP,
 --     GGML_OP_ADD,
 --     GGML_OP_SUB,
@@ -58,9 +58,9 @@ def type.marshal : type -> USize
 --     GGML_OP_RELU,
 --     GGML_OP_GELU,
 --     GGML_OP_NORM, // normalize
--- 
+--
 --     GGML_OP_MUL_MAT,
--- 
+--
 --     GGML_OP_SCALE,
 --     GGML_OP_CPY,
 --     GGML_OP_RESHAPE,
@@ -73,10 +73,10 @@ def type.marshal : type -> USize
 --     GGML_OP_ROPE,
 --     GGML_OP_CONV_1D_1S,
 --     GGML_OP_CONV_1D_2S,
--- 
+--
 --     GGML_OP_FLASH_ATTN,
 --     GGML_OP_FLASH_FF,
--- 
+--
 --     GGML_OP_COUNT,
 -- };
 
@@ -167,19 +167,23 @@ structure Tensor (ctx: Context) where
 deriving Inhabited
 
 structure Cgraph (ctx : Context) where
-  private mk :: ptr : USize 
+  private mk :: ptr : USize
 deriving Inhabited
 
 -- functions to be bound in GGML:
 -- master ~/papers/llama/llama.cpp> rg "ggml_[a-zA-Z0-9_]*\(" main.cpp -o --no-line-number | sort | uniq
-@[extern "lean_ggml_add"]
+-- @[extern "lean_ggml_add"]
 opaque ggml_add (a : Tensor ctx) (b : Tensor ctx) : BaseIO (Tensor ctx)
 
 -- ggml_blck_size(
-opaque ggml_blck_size (t : type) : BaseIO Int
+-- @[extern "lean_ggml_blck_size"]
+opaque ggml_blck_size_ (t : USize) : BaseIO Int
+
+def ggml_blck_size (t : type) : BaseIO Int := ggml_blck_size_ t.marshal
 
 -- ggml_build_forward_expand(
-opaque ggml_build_forward_expand (graph : Cgraph ctx) (tensor : Tensor ctx)  : BaseIO Unit 
+-- @[extern "lean_ggml_build_forward_expand"]
+opaque ggml_build_forward_expand (graph : Cgraph ctx) (tensor : Tensor ctx)  : BaseIO Unit
 -- ggml_cpu_has_arm_fma(
 -- ggml_cpu_has_avx(
 -- ggml_cpu_has_avx2(
@@ -206,7 +210,7 @@ opaque ggml_element_size (a : Tensor ctx) : BaseIO UInt64
 
 -- void pointer?
 -- ggml_get_data(
--- opaque ggml_get_data (a : Tensor ctx) : BaseIO VoidPtr 
+-- opaque ggml_get_data (a : Tensor ctx) : BaseIO VoidPtr
 
 -- ggml_get_rows(
 opaque ggml_get_rows (a b : Tensor ctx) : Tensor ctx
@@ -217,94 +221,114 @@ opaque ggml_get_rows (a b : Tensor ctx) : Tensor ctx
 opaque ggml_init (size : USize) : BaseIO (Context)
 
 -- ggml_free(
-@[extern "lean_ggml_free"]
+-- @[extern "lean_ggml_free"]
 opaque ggml_free (ctx : Context) : BaseIO (Unit)
 
-@[extern "lean_ggml_print_objects"]
+-- @[extern "lean_ggml_print_objects"]
 opaque ggml_print_objects (ctx : Context) : BaseIO (Unit)
 
 -- ggml_mul(
+-- @[extern "lean_ggml_mul"]
 opaque ggml_mul (a b : Tensor ctx) : BaseIO (Tensor ctx)
 
 -- ggml_mul_mat(
-opaque ggml_mul_mat (a b : Tensor ctx) : BaseIO (Tensor ctx) 
+-- @[extern "lean_ggml_mul_mat"]
+opaque ggml_mul_mat (a b : Tensor ctx) : BaseIO (Tensor ctx)
 
 -- ggml_nbytes(
-  opaque ggml_nbytes (a : Tensor ctx) : BaseIO (UInt64)
+-- @[extern "lean_ggml_nbytes"]
+opaque ggml_nbytes (a : Tensor ctx) : BaseIO (UInt64)
 
 -- ggml_nelements(
+-- @[extern "lean_ggml_nelements"]
 opaque ggml_nelements (a : Tensor ctx) : BaseIO Int
 
 -- ggml_new_f32(
-opaque ggml_new_f32 (ctx : Context) (value : Float) : BaseIO (Tensor ctx) 
+-- @[extern "lean_ggml_new_f32"]
+opaque ggml_new_f32 (ctx : Context) (value : Float) : BaseIO (Tensor ctx)
 
 -- ggml_new_tensor_1d(
-@[extern "lean_ggml_new_tensor_1d"]
-opaque ggml_new_tensor_1d_ (ctx : Context) (type : USize) (ne0 : USize) : BaseIO (Tensor ctx) 
+-- @[extern "lean_ggml_new_tensor_1d"]
+opaque ggml_new_tensor_1d_ (ctx : Context) (type : USize) (ne0 : USize) : BaseIO (Tensor ctx)
 
-def ggml_new_tensor_1d (ctx: Context) (t : type) (ne0 : USize) : BaseIO (Tensor ctx) := 
+def ggml_new_tensor_1d (ctx: Context) (t : type) (ne0 : USize) : BaseIO (Tensor ctx) :=
   ggml_new_tensor_1d_ ctx t.marshal ne0
 
 -- ggml_new_tensor_2d(
-@[extern "lean_ggml_new_tensor_2d"]
-opaque ggml_new_tensor_2d_ (ctx : Context) (type : USize) (ne0 ne1 : USize) : BaseIO (Tensor ctx) 
+-- @[extern "lean_ggml_new_tensor_2d"]
+opaque ggml_new_tensor_2d_ (ctx : Context) (type : USize) (ne0 ne1 : USize) : BaseIO (Tensor ctx)
 
-def ggml_new_tensor_2d (ctx: Context) (t : type) (ne0 ne1 : USize) : BaseIO (Tensor ctx) := 
+def ggml_new_tensor_2d (ctx: Context) (t : type) (ne0 ne1 : USize) : BaseIO (Tensor ctx) :=
   ggml_new_tensor_2d_ ctx t.marshal ne0 ne1
 
 -- ggml_new_tensor_3d(
-@[extern "lean_ggml_new_tensor_3d"]
-opaque ggml_new_tensor_3d_ (ctx : Context) (type : USize) (ne0 ne1 ne2 : USize) : BaseIO (Tensor ctx) 
+-- @[extern "lean_ggml_new_tensor_3d"]
+opaque ggml_new_tensor_3d_ (ctx : Context) (type : USize) (ne0 ne1 ne2 : USize) : BaseIO (Tensor ctx)
 
-def ggml_new_tensor_3d (ctx: Context) (t : type) (ne0 ne1 ne2 : USize) : BaseIO (Tensor ctx) := 
+def ggml_new_tensor_3d (ctx: Context) (t : type) (ne0 ne1 ne2 : USize) : BaseIO (Tensor ctx) :=
   ggml_new_tensor_3d_ ctx t.marshal ne0 ne1 ne2
 
 -- TODO: what does this actually do?
 -- ggml_permute(
+-- @[extern "lean_ggml_permute"]
 opaque ggml_permute (a : Tensor ctx) (ax0 ax1 ax2 ax3 : Int) : BaseIO (Tensor ctx)
 
 -- if a is the same shape as b, and a is not parameter, return a
 -- otherwise, return a new tensor: repeat(a) to fit in b
 -- ggml_repeat(
+-- @[extern "lean_ggml_repeat"]
 opaque ggml_repeat (a b : Tensor ctx) : BaseIO (Tensor ctx)
 
 -- review view(a)
 -- ggml_reshape_3d(
+-- @[extern "lean_ggml_reshape_3d"]
 opaque ggml_reshape_3d (a : Tensor ctx) (ne0 ne1 ne2 : Int)  : BaseIO (Tensor ctx)
 
--- TODO: where is this from
+-- TODO: where is this fro
+-- @[extern "lean_ggml_rms_norm"]
 opaque ggml_rms_norm (a : Tensor ctx) : BaseIO (Tensor ctx)
 
 -- rotary position embedding
 -- ggml_rope(
+-- @[extern "lean_ggml_rope"]
 opaque ggml_rope (a : Tensor ctx) (npast ndims mode : Int) : BaseIO (Tensor ctx)
 
 -- ggml_scale(
+-- @[extern "lean_ggml_scale"]
 opaque ggml_scale (a b : Tensor ctx) : BaseIO (Tensor ctx)
 
+
 -- TODO: what is silu? [OK, it's x ↦ xσ(x)]
+-- @[extern "lean_ggml_silu"]
 opaque ggml_silu (a : Tensor ctx) : BaseIO (Tensor ctx)
 
 -- ggml_soft_max(
-opaque ggml_soft_max (a : Tensor ctx) : BaseIO (Tensor ctx) 
+-- @[extern "lean_ggml_soft_max"]
+opaque ggml_soft_max (a : Tensor ctx) : BaseIO (Tensor ctx)
 
 -- ggml_time_init(
-opaque ggml_time_init : BaseIO Unit 
+-- @[extern "lean_ggml_time_init"]
+opaque ggml_time_init : BaseIO Unit
 
 -- ggml_time_us(
-opaque ggml_time_us : BaseIO Int 
+-- @[extern "lean_ggml_time_us"]
+opaque ggml_time_us : BaseIO Int
 
 -- size in bytes for all elements in a block.
 -- ggml_type_size(
-opaque ggml_type_size (t : ty) : BaseIO Int 
+-- @[extern "lean_ggml_type_size"]
+opaque ggml_type_size (t : ty) : BaseIO Int
 
 -- return number of bytes as float
+-- @[extern "lean_ggml_type_sizef"]
 opaque ggml_type_sizef(t : ty) : BaseIO Float
 
 -- ggml_used_mem(
+-- @[extern "lean_ggml_used_mem"]
 opaque ggml_used_mem (ctx: Context): BaseIO Int
 
 -- ggml_view_1d(
+-- @[extern "lean_ggml_view_1d"]
 opaque ggml_view_1d (t : Tensor ctx) (ne0 : Int): BaseIO (Tensor ctx)
 
 end ggml
@@ -332,7 +356,7 @@ structure GptParams where
   nCtx : Nat := 512
 
   -- sampling parameters
-  topK : Nat := 40 
+  topK : Nat := 40
   topP : Float := 0.95
   temp : Float := 0.8
   repeatPenalty : Float := 1.30
@@ -351,24 +375,24 @@ structure GptParams where
   ignoreEos : Bool := False -- do not stop generating after EOS.
 
 
-structure gptvocab where 
-  token : String 
+structure gptvocab where
+  token : String
   token2id : HashMap Int String
-  id2token : HashMap String Int 
+  id2token : HashMap String Int
 
 -- TODO: do I need 'int32'?
 abbrev gptvocab.id : Type := UInt32
 
 def gptvocab.gpt_tokenize (vocab: gptvocab) (text: String): Array gptvocab := sorry
 
--- sentencepiece tokenization. 
-def gptvocab.llama_tokenize (vocab: gptvocab) (text: String) (bos: Bool): Array gptvocab := sorry 
+-- sentencepiece tokenization.
+def gptvocab.llama_tokenize (vocab: gptvocab) (text: String) (bos: Bool): Array gptvocab := sorry
 
 -- load the tokens from encoder.json
-def gptvocab.init (fname : String): Option gptvocab := sorry 
+def gptvocab.init (fname : String): Option gptvocab := sorry
 
 -- random generation monad.
-abbrev LlamaM := ReaderT GptParams IO 
+abbrev LlamaM := ReaderT GptParams IO
 
 
 -- sample next token given probabilities for each embedding
@@ -379,18 +403,18 @@ def gptvocab.llama_sample_top_p_top_k (vocab: gptvocab) (logits: Array Float)
   -- (repeatPenalty : Double)
   -- (topK : Nat)
   -- (topP : Double)
-  -- (temp : Double) 
-  : LlamaM gptvocab.id := sorry 
- 
+  -- (temp : Double)
+  : LlamaM gptvocab.id := sorry
+
 -- filter to top K tokens from list of logits
-def gptvocab.sample_top_k (vocab: gptvocab) 
+def gptvocab.sample_top_k (vocab: gptvocab)
   (logitsId : Array (Float × gptvocab.id))
   -- (topK: Nat)
-  : LlamaM gptvocab.id := sorry 
+  : LlamaM gptvocab.id := sorry
 end Util
 
 
-section Main 
+section Main
 
 
 -- https://github.com/ggerganov/llama.cpp/blob/da5303c1ea68aa19db829c634f1e10d08d409680/utils.cpp#L18
@@ -447,7 +471,7 @@ def llama : Cmd := `[Cli|
 
 ]
 
-open ggml in 
+open ggml in
 def main (args : List String) : IO UInt32 := do
   -- llama.validate args
   let ctx <- ggml_init (1024 * 1024 * 1024)

@@ -1,11 +1,12 @@
 import Lake
 open Lake DSL
 
-require Alloy from git "https://github.com/tydeu/lean4-alloy.git"@"334407"
 require Cli from git "https://github.com/mhuisi/lean4-cli.git"@"nightly"
 require Std from git "https://github.com/leanprover/std4"@"529a6"
 package «llama» {
   -- add package configuration options here
+  extraDepTargets := #["ggmlffi-shim"]
+  moreLinkArgs := #["-L./build/lib/", "-lggmlffishim", "-lggml"]
 }
 
 lean_lib «Llama» {
@@ -17,7 +18,27 @@ lean_exe «llama» {
   root := `Main
 }
 
-extern_lib «ggml» (pkg : Package) := do
+target «ggmlffi» (pkg : Package) : FilePath := do
+  -- see also: https://github.com/yatima-inc/RustFFI.lean/blob/2a397cbc0904e2d575862c4067b512b6cc6b65f8/lakefile.lean
+  let srcFileName := "ggmlffi.c"
+  let oFilePath := pkg.oleanDir / "libggmlffi.o"
+  let srcJob ← inputFile srcFileName
+  buildFileAfterDep oFilePath srcJob fun srcFile => do
+    let flags := #["-I", (← getLeanIncludeDir).toString,
+                   "-I", (pkg.dir / "ggml" / "include").toString,
+                   "-fPIC"]
+    compileO srcFileName oFilePath srcFile flags -- build static archive
+
+#check IndexBuildM
+#check buildStaticLib
+
+target «ggmlffi-shim» (pkg : Package) : FilePath := do
+  let name := nameToStaticLib "ggmlffishim"
+  let ffiO ← fetch <| pkg.target ``ggmlffi
+  buildStaticLib (pkg.buildDir / "lib" / name) #[ffiO]
+
+
+target «ggml» (pkg : Package) : FilePath := do
   -- build with cmake and make
   let ggmlBaseDir : FilePath := pkg.dir / "ggml"
   let ggmlBuildDir := ggmlBaseDir / "build"
@@ -28,16 +49,6 @@ extern_lib «ggml» (pkg : Package) := do
   let tgtPath := pkg.libDir / "libggml.a"
   IO.FS.createDirAll pkg.libDir
   IO.FS.writeBinFile tgtPath (← IO.FS.readBinFile (ggmlBuildDir / "src" / "libggml.a"))
-  -- give library to lake
   pure (BuildJob.pure tgtPath)
-
-extern_lib «ggml-ffi» (pkg : Package) := do
-  -- see also: https://github.com/yatima-inc/RustFFI.lean/blob/2a397cbc0904e2d575862c4067b512b6cc6b65f8/lakefile.lean
-  let srcFileName := "ggmlffi.c"
-  let oFilePath := pkg.oleanDir / "libggmlffi.o"
-  let srcJob ← inputFile srcFileName
-  buildFileAfterDep oFilePath srcJob fun srcFile => do
-    let flags := #["-I", (← getLeanIncludeDir).toString, 
-                   "-I", (pkg.dir / "ggml" / "include").toString,
-                   "-fPIC"]
-    compileO srcFileName oFilePath srcFile flags -- build static archive
+  -- let outPath := pkg.libDir / "libggmlplusffi.a"
+  -- buildStaticLib outPath #[ggmlO, BuildJob.pure tgtPath]
