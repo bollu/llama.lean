@@ -172,17 +172,17 @@ deriving Inhabited
 
 -- functions to be bound in GGML:
 -- master ~/papers/llama/llama.cpp> rg "ggml_[a-zA-Z0-9_]*\(" main.cpp -o --no-line-number | sort | uniq
--- @[extern "lean_ggml_add"]
+@[extern "lean_ggml_add"]
 opaque ggml_add (a : Tensor ctx) (b : Tensor ctx) : BaseIO (Tensor ctx)
 
 -- ggml_blck_size(
--- @[extern "lean_ggml_blck_size"]
+@[extern "lean_ggml_blck_size"]
 opaque ggml_blck_size_ (t : USize) : BaseIO Int
 
 def ggml_blck_size (t : type) : BaseIO Int := ggml_blck_size_ t.marshal
 
 -- ggml_build_forward_expand(
--- @[extern "lean_ggml_build_forward_expand"]
+@[extern "lean_ggml_build_forward_expand"]
 opaque ggml_build_forward_expand (graph : Cgraph ctx) (tensor : Tensor ctx)  : BaseIO Unit
 -- ggml_cpu_has_arm_fma(
 -- ggml_cpu_has_avx(
@@ -221,48 +221,48 @@ opaque ggml_get_rows (a b : Tensor ctx) : Tensor ctx
 opaque ggml_init (size : USize) : BaseIO (Context)
 
 -- ggml_free(
--- @[extern "lean_ggml_free"]
+@[extern "lean_ggml_free"]
 opaque ggml_free (ctx : Context) : BaseIO (Unit)
 
--- @[extern "lean_ggml_print_objects"]
+@[extern "lean_ggml_print_objects"]
 opaque ggml_print_objects (ctx : Context) : BaseIO (Unit)
 
 -- ggml_mul(
--- @[extern "lean_ggml_mul"]
+@[extern "lean_ggml_mul"]
 opaque ggml_mul (a b : Tensor ctx) : BaseIO (Tensor ctx)
 
 -- ggml_mul_mat(
--- @[extern "lean_ggml_mul_mat"]
+@[extern "lean_ggml_mul_mat"]
 opaque ggml_mul_mat (a b : Tensor ctx) : BaseIO (Tensor ctx)
 
 -- ggml_nbytes(
--- @[extern "lean_ggml_nbytes"]
+@[extern "lean_ggml_nbytes"]
 opaque ggml_nbytes (a : Tensor ctx) : BaseIO (UInt64)
 
 -- ggml_nelements(
--- @[extern "lean_ggml_nelements"]
+@[extern "lean_ggml_nelements"]
 opaque ggml_nelements (a : Tensor ctx) : BaseIO Int
 
 -- ggml_new_f32(
--- @[extern "lean_ggml_new_f32"]
+@[extern "lean_ggml_new_f32"]
 opaque ggml_new_f32 (ctx : Context) (value : Float) : BaseIO (Tensor ctx)
 
 -- ggml_new_tensor_1d(
--- @[extern "lean_ggml_new_tensor_1d"]
+@[extern "lean_ggml_new_tensor_1d"]
 opaque ggml_new_tensor_1d_ (ctx : Context) (type : USize) (ne0 : USize) : BaseIO (Tensor ctx)
 
 def ggml_new_tensor_1d (ctx: Context) (t : type) (ne0 : USize) : BaseIO (Tensor ctx) :=
   ggml_new_tensor_1d_ ctx t.marshal ne0
 
 -- ggml_new_tensor_2d(
--- @[extern "lean_ggml_new_tensor_2d"]
+@[extern "lean_ggml_new_tensor_2d"]
 opaque ggml_new_tensor_2d_ (ctx : Context) (type : USize) (ne0 ne1 : USize) : BaseIO (Tensor ctx)
 
 def ggml_new_tensor_2d (ctx: Context) (t : type) (ne0 ne1 : USize) : BaseIO (Tensor ctx) :=
   ggml_new_tensor_2d_ ctx t.marshal ne0 ne1
 
 -- ggml_new_tensor_3d(
--- @[extern "lean_ggml_new_tensor_3d"]
+@[extern "lean_ggml_new_tensor_3d"]
 opaque ggml_new_tensor_3d_ (ctx : Context) (type : USize) (ne0 ne1 ne2 : USize) : BaseIO (Tensor ctx)
 
 def ggml_new_tensor_3d (ctx: Context) (t : type) (ne0 ne1 ne2 : USize) : BaseIO (Tensor ctx) :=
@@ -270,66 +270,68 @@ def ggml_new_tensor_3d (ctx: Context) (t : type) (ne0 ne1 ne2 : USize) : BaseIO 
 
 -- TODO: what does this actually do?
 -- ggml_permute(
--- @[extern "lean_ggml_permute"]
+@[extern "lean_ggml_permute"]
 opaque ggml_permute (a : Tensor ctx) (ax0 ax1 ax2 ax3 : Int) : BaseIO (Tensor ctx)
 
 -- if a is the same shape as b, and a is not parameter, return a
 -- otherwise, return a new tensor: repeat(a) to fit in b
 -- ggml_repeat(
--- @[extern "lean_ggml_repeat"]
+@[extern "lean_ggml_repeat"]
 opaque ggml_repeat (a b : Tensor ctx) : BaseIO (Tensor ctx)
 
 -- review view(a)
 -- ggml_reshape_3d(
--- @[extern "lean_ggml_reshape_3d"]
+@[extern "lean_ggml_reshape_3d"]
 opaque ggml_reshape_3d (a : Tensor ctx) (ne0 ne1 ne2 : Int)  : BaseIO (Tensor ctx)
 
 -- TODO: where is this fro
--- @[extern "lean_ggml_rms_norm"]
+@[extern "lean_ggml_rms_norm"]
 opaque ggml_rms_norm (a : Tensor ctx) : BaseIO (Tensor ctx)
 
 -- rotary position embedding
 -- ggml_rope(
--- @[extern "lean_ggml_rope"]
+@[extern "lean_ggml_rope"]
 opaque ggml_rope (a : Tensor ctx) (npast ndims mode : Int) : BaseIO (Tensor ctx)
 
 -- ggml_scale(
--- @[extern "lean_ggml_scale"]
+@[extern "lean_ggml_scale"]
 opaque ggml_scale (a b : Tensor ctx) : BaseIO (Tensor ctx)
 
 
 -- TODO: what is silu? [OK, it's x ↦ xσ(x)]
--- @[extern "lean_ggml_silu"]
+@[extern "lean_ggml_silu"]
 opaque ggml_silu (a : Tensor ctx) : BaseIO (Tensor ctx)
 
 -- ggml_soft_max(
--- @[extern "lean_ggml_soft_max"]
+@[extern "lean_ggml_soft_max"]
 opaque ggml_soft_max (a : Tensor ctx) : BaseIO (Tensor ctx)
 
 -- ggml_time_init(
--- @[extern "lean_ggml_time_init"]
+@[extern "lean_ggml_time_init"]
 opaque ggml_time_init : BaseIO Unit
 
 -- ggml_time_us(
--- @[extern "lean_ggml_time_us"]
+@[extern "lean_ggml_time_us"]
 opaque ggml_time_us : BaseIO Int
 
 -- size in bytes for all elements in a block.
 -- ggml_type_size(
--- @[extern "lean_ggml_type_size"]
-opaque ggml_type_size (t : ty) : BaseIO Int
+@[extern "lean_ggml_type_size"]
+opaque ggml_type_size_ (i : USize) : BaseIO Int
+def ggml_type_size (t : type) : BaseIO Int := ggml_type_size_ t.marshal
 
 -- return number of bytes as float
--- @[extern "lean_ggml_type_sizef"]
-opaque ggml_type_sizef(t : ty) : BaseIO Float
+@[extern "lean_ggml_type_sizef"]
+opaque ggml_type_sizef_ (i : USize) : BaseIO Float
+opaque ggml_type_sizef (t : type) : BaseIO Float := ggml_type_sizef_ t.marshal
 
 -- ggml_used_mem(
--- @[extern "lean_ggml_used_mem"]
+@[extern "lean_ggml_used_mem"]
 opaque ggml_used_mem (ctx: Context): BaseIO Int
 
 -- ggml_view_1d(
--- @[extern "lean_ggml_view_1d"]
-opaque ggml_view_1d (t : Tensor ctx) (ne0 : Int): BaseIO (Tensor ctx)
+@[extern "lean_ggml_view_1d"]
+opaque ggml_view_1d (t : Tensor ctx) (ne0 : Int) (offset : UInt64) : BaseIO (Tensor ctx)
 
 end ggml
 

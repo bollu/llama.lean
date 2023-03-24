@@ -27,7 +27,15 @@ lean_object *lean_ggml_free(size_t ctx, lean_object * /* w */) {
 	return lean_io_result_mk_ok(lean_box(0));
 }
 
+
+
 // -- Tensor functions --
+lean_object *lean_ggml_new_f32(size_t ctx, float value, lean_object * /* w */) {
+  struct ggml_tensor *out = ggml_new_f32((struct ggml_context *)ctx, value);
+  return lean_io_result_mk_ok(lean_box_usize((size_t)(out)));
+}
+
+
 lean_object *lean_ggml_new_tensor_1d (size_t ctx, size_t type, size_t nelem, lean_object * /* w */) {
 	struct ggml_tensor *out = ggml_new_tensor_1d((struct ggml_context*)ctx,
 								type, nelem);
@@ -51,6 +59,67 @@ lean_object *lean_ggml_mul(
 		(struct ggml_tensor*)b);
     return lean_io_result_mk_ok(lean_box_usize((size_t)(out)));
 };
+
+lean_object *lean_ggml_scale(
+    size_t ctx, size_t a, size_t b, lean_object * /* w */) {
+	struct ggml_tensor *out = ggml_scale(
+		(struct ggml_context*) ctx,
+		(struct ggml_tensor*)a,
+		(struct ggml_tensor*)b);
+    return lean_io_result_mk_ok(lean_box_usize((size_t)(out)));
+};
+
+lean_object *lean_ggml_repeat(
+    size_t ctx, size_t a, size_t b, lean_object * /* w */) {
+	struct ggml_tensor *out = ggml_repeat(
+		(struct ggml_context*) ctx,
+		(struct ggml_tensor*)a,
+		(struct ggml_tensor*)b);
+    return lean_io_result_mk_ok(lean_box_usize((size_t)(out)));
+};
+
+
+lean_object *lean_ggml_reshape_3d(
+    size_t ctx, size_t tensor,
+    size_t ne0, size_t ne1, size_t ne2,
+    lean_object * /* w */) {
+	struct ggml_tensor *out = ggml_reshape_3d(
+		(struct ggml_context*) ctx,
+		(struct ggml_tensor*)tensor,
+		ne0, ne1, ne2);
+    return lean_io_result_mk_ok(lean_box_usize((size_t)(out)));
+};
+
+
+// -- unary ops ---
+
+lean_object *lean_ggml_rms_norm(
+    size_t ctx, size_t tensor,
+    lean_object * /* w */) {
+  struct ggml_tensor *out = ggml_rms_norm(
+		(struct ggml_context*) ctx,
+		(struct ggml_tensor*)tensor);
+  return lean_io_result_mk_ok(lean_box_usize((size_t)(out)));
+};
+
+lean_object *lean_ggml_silu(
+    size_t ctx, size_t tensor,
+    lean_object * /* w */) {
+  struct ggml_tensor *out = ggml_silu(
+		(struct ggml_context*) ctx,
+		(struct ggml_tensor*)tensor);
+  return lean_io_result_mk_ok(lean_box_usize((size_t)(out)));
+};
+
+lean_object *lean_ggml_soft_max(
+    size_t ctx, size_t tensor,
+    lean_object * /* w */) {
+  struct ggml_tensor *out = ggml_soft_max(
+		(struct ggml_context*) ctx,
+		(struct ggml_tensor*)tensor);
+  return lean_io_result_mk_ok(lean_box_usize((size_t)(out)));
+};
+
 
 
 lean_object *lean_ggml_mul_mat(
@@ -77,15 +146,85 @@ lean_object *lean_ggml_new_tensor_3d (size_t ctx,
     return lean_io_result_mk_ok(lean_box_usize((size_t)(out)));
 }
 
-int64_t lean_ggml_blck_size (size_t ty) {
-  return ggml_blck_size(ty);
+lean_object *lean_ggml_permute(size_t ctx,
+			       size_t tensor,
+			       size_t ax0,
+			       size_t ax1,
+			       size_t ax2,
+			       size_t ax3) {
+  struct ggml_tensor *out =
+    ggml_permute((struct ggml_context *)ctx,
+		 (struct ggml_tensor *)tensor, ax0, ax1, ax2, ax3);
+  return lean_io_result_mk_ok(lean_box_usize((size_t)out));
+					 
 }
 
-uint64_t lean_ggml_nbytes (size_t ty) {
-  return ggml_nbytes((struct ggml_tensor*)ty);
+// TODO: Fix int handling.
+lean_object *lean_ggml_rope(size_t ctx,
+			    size_t tensor,
+			    int64_t npast,
+			    int64_t ndims,
+			    int64_t mode) {
+
+  struct ggml_tensor *out =
+    ggml_rope((struct ggml_context *)ctx,
+	      (struct ggml_tensor *)tensor, npast, ndims, mode);
+  return lean_io_result_mk_ok(lean_box_usize((size_t)out));
+					 
 }
 
-lean_object *lean_ggml_forward_expand (size_t ctx, size_t graph, size_t tensor) {
+lean_object *lean_ggml_view_1d(size_t ctx,
+			       size_t tensor,
+			       int64_t ne0,
+			       size_t offset) { // TODO: check how Int64 is sent on the wire.
+  struct ggml_tensor *out =
+    ggml_view_1d((struct ggml_context *)ctx,
+		 (struct ggml_tensor *)tensor, ne0, offset);
+    return lean_io_result_mk_ok(lean_box_usize((size_t)out)); 
+}
+
+lean_object *lean_ggml_blck_size (size_t ty) {
+  int out =  ggml_blck_size(ty);
+  return lean_io_result_mk_ok(lean_int64_to_int(out));
+}
+
+lean_object* lean_ggml_nbytes (size_t ty) {
+  uint64_t out =  ggml_nbytes((struct ggml_tensor*)ty);
+  return lean_io_result_mk_ok(lean_box_uint64(out));
+}
+
+lean_object* lean_ggml_nelements (size_t ty) {
+  int out =  ggml_nelements((struct ggml_tensor*)ty);
+  return lean_io_result_mk_ok(lean_int64_to_int(out));
+}
+
+lean_object *lean_ggml_build_forward_expand (size_t ctx, size_t graph, size_t tensor) {
     ggml_build_forward_expand((void*)graph, (void*)tensor);
     return lean_io_result_mk_ok(lean_box(0));
+}
+
+lean_object *lean_ggml_used_mem (size_t ctx) {
+  int out = ggml_used_mem((void*)ctx);
+  return lean_io_result_mk_ok(lean_int64_to_int(out));
+}
+
+lean_object *lean_ggml_time_init() {
+  ggml_time_init();
+  return lean_io_result_mk_ok(lean_box(0));
+}
+
+lean_object *lean_ggml_time_us() {
+  int result = ggml_time_us();
+  return lean_io_result_mk_ok(lean_int64_to_int(result));
+}
+
+
+lean_object *lean_ggml_type_size(size_t type) {
+  int result = ggml_type_size(type);
+  return lean_io_result_mk_ok(lean_int64_to_int(result));
+}
+
+lean_object *lean_ggml_type_sizef(size_t type) {
+  int result = ggml_type_sizef(type);
+  return lean_io_result_mk_ok(lean_box_float(result));
 }
