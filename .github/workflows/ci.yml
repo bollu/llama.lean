@@ -1,0 +1,41 @@
+name: build & docs
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: build and deploy documentation.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 📥
+        uses: actions/checkout@v3
+
+      - name: Clone submodules 🧬
+        run: |
+          git submodule update --init
+
+      - name: Install elan 🕑
+        run: |
+          set -o pipefail
+          curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- --default-toolchain none -y
+          ~/.elan/bin/lean --version
+          echo "$HOME/.elan/bin" >> $GITHUB_PATH
+
+      - name: Compile 🧐
+        run: |
+          lake build
+
+      - name: Generate docs 📜
+        run: |
+          ./docgen.sh
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: build/doc # The folder the action should deploy.
+
