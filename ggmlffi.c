@@ -7,6 +7,17 @@ FFI bindings to GGWP
 #include "ggml/ggml.h"
 
 
+// unbox an integer.
+int64_t lean_unbox_int64(lean_object *o) {
+  assert(lean_is_scalar(o) && "given too large integer");
+  return lean_scalar_to_int64(o);
+}
+
+// box an integer.
+lean_object *lean_box_int64(int64_t i) {
+  return lean_int64_to_int(i);
+}
+
 // -- Context functions --
 lean_object * lean_ggml_init(size_t mem_size, lean_object * /* w */) {
 	struct ggml_init_params params = {
@@ -60,6 +71,16 @@ lean_object *lean_ggml_mul(
     return lean_io_result_mk_ok(lean_box_usize((size_t)(out)));
 };
 
+lean_object *lean_ggml_cpy(
+    size_t ctx, size_t a, size_t b, lean_object * /* w */) {
+	struct ggml_tensor *out = ggml_cpy(
+		(struct ggml_context*) ctx,
+		(struct ggml_tensor*)a,
+		(struct ggml_tensor*)b);
+    return lean_io_result_mk_ok(lean_box_usize((size_t)(out)));
+};
+
+
 lean_object *lean_ggml_scale(
     size_t ctx, size_t a, size_t b, lean_object * /* w */) {
 	struct ggml_tensor *out = ggml_scale(
@@ -78,16 +99,26 @@ lean_object *lean_ggml_repeat(
     return lean_io_result_mk_ok(lean_box_usize((size_t)(out)));
 };
 
+lean_object *lean_ggml_diag_mask_inf(size_t ctx, size_t a, lean_object *npast_boxed) {
+  int npast = lean_unbox_int64(npast_boxed);
+  struct ggml_tensor *out = ggml_diag_mask_inf((struct ggml_context*)ctx,
+					       (struct ggml_tensor *)a,
+					       npast);
+  return lean_io_result_mk_ok(lean_box_usize((size_t)out));
+}
 
 lean_object *lean_ggml_reshape_3d(
     size_t ctx, size_t tensor,
-    size_t ne0, size_t ne1, size_t ne2,
+    lean_object *ne0_boxed, lean_object *ne1_boxed, lean_object *ne2_boxed,
     lean_object * /* w */) {
-	struct ggml_tensor *out = ggml_reshape_3d(
-		(struct ggml_context*) ctx,
-		(struct ggml_tensor*)tensor,
-		ne0, ne1, ne2);
-    return lean_io_result_mk_ok(lean_box_usize((size_t)(out)));
+  int ne0 = lean_unbox_int64(ne0_boxed);
+  int ne1 = lean_unbox_int64(ne1_boxed);
+  int ne2 = lean_unbox_int64(ne2_boxed);
+  struct ggml_tensor *out =
+    ggml_reshape_3d((struct ggml_context*) ctx,
+		    (struct ggml_tensor*)tensor,
+		    ne0, ne1, ne2);
+  return lean_io_result_mk_ok(lean_box_usize((size_t)(out)));
 };
 
 
@@ -156,31 +187,35 @@ lean_object *lean_ggml_permute(size_t ctx,
     ggml_permute((struct ggml_context *)ctx,
 		 (struct ggml_tensor *)tensor, ax0, ax1, ax2, ax3);
   return lean_io_result_mk_ok(lean_box_usize((size_t)out));
-					 
+
 }
+
 
 // TODO: Fix int handling.
 lean_object *lean_ggml_rope(size_t ctx,
 			    size_t tensor,
-			    int64_t npast,
-			    int64_t ndims,
-			    int64_t mode) {
-
+			    lean_object *npast_boxed,
+			    lean_object *ndims_boxed,
+			    lean_object *mode_boxed) {
+  int npast = lean_unbox_int64(npast_boxed);
+  int ndims = lean_unbox_int64(ndims_boxed);
+  int mode = lean_unbox_int64(mode_boxed);
   struct ggml_tensor *out =
     ggml_rope((struct ggml_context *)ctx,
 	      (struct ggml_tensor *)tensor, npast, ndims, mode);
   return lean_io_result_mk_ok(lean_box_usize((size_t)out));
-					 
+
 }
 
 lean_object *lean_ggml_view_1d(size_t ctx,
 			       size_t tensor,
-			       int64_t ne0,
+			       lean_object* ne0_boxed,
 			       size_t offset) { // TODO: check how Int64 is sent on the wire.
+  int ne0 = lean_unbox_int64(ne0_boxed);
   struct ggml_tensor *out =
     ggml_view_1d((struct ggml_context *)ctx,
 		 (struct ggml_tensor *)tensor, ne0, offset);
-    return lean_io_result_mk_ok(lean_box_usize((size_t)out)); 
+    return lean_io_result_mk_ok(lean_box_usize((size_t)out));
 }
 
 lean_object *lean_ggml_blck_size (size_t ty) {
@@ -227,4 +262,8 @@ lean_object *lean_ggml_type_size(size_t type) {
 lean_object *lean_ggml_type_sizef(size_t type) {
   int result = ggml_type_sizef(type);
   return lean_io_result_mk_ok(lean_box_float(result));
+}
+
+size_t lean_ggml_element_size(lean_object *ctx, lean_object *a) {
+  return ggml_element_size((struct ggml_tensor *)a);
 }

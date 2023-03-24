@@ -197,14 +197,17 @@ opaque ggml_build_forward_expand (graph : Cgraph ctx) (tensor : Tensor ctx)  : B
 -- ggml_cpu_has_vsx(
 -- ggml_cpu_has_wasm_simd(
 -- ggml_cpy(
+@[extern "lean_ggml_cpy"]
 opaque ggml_cpy (a b : Tensor ctx) : BaseIO (Tensor ctx)
 
 -- set elements above the diagonal to -INF
 -- in-place, returns view(a).
 -- ggml_diag_mask_inf(
-opaque ggml_diag_mask_inf (a : Tensor ctx) (n_past : Int32) : BaseIO (Tensor ctx)
+@[extern "lean_ggml_diag_mask_inf"]
+opaque ggml_diag_mask_inf (a : Tensor ctx) (n_past : Int) : BaseIO (Tensor ctx)
 
 -- ggml_element_size(
+@[extern "lean_ggml_element_size"]
 opaque ggml_element_size (a : Tensor ctx) : BaseIO UInt64
 
 
@@ -235,9 +238,12 @@ opaque ggml_mul (a b : Tensor ctx) : BaseIO (Tensor ctx)
 @[extern "lean_ggml_mul_mat"]
 opaque ggml_mul_mat (a b : Tensor ctx) : BaseIO (Tensor ctx)
 
+#check Int
 -- ggml_nbytes(
 @[extern "lean_ggml_nbytes"]
 opaque ggml_nbytes (a : Tensor ctx) : BaseIO (UInt64)
+
+
 
 -- ggml_nelements(
 @[extern "lean_ggml_nelements"]
