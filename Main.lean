@@ -82,40 +82,41 @@ def type.marshal : type -> USize
 
 inductive op
 | none
-| dup
-| add
-| sub
-| mul
-| div
-| sqr
-| sqrt
-| sum
-| mean
-| repeat_
-| abs
-| sgn
-| neg
-| step
-| relu
-| gelu
-| silu
-| norm -- NORMALIZE
-| rms_norm
-| mul_mat
-| scale
-| cpy
-| reshape
-| view
-| permute
-| transpose
-| get_rows
-| diag_mask_inf
-| soft_max
-| rope
-| conv_1d_1s
-| conv_1d_2s
-| flash_attn
-| flash_ff
+| dup --Identity function : Tensor k → Tensor k
+| add --Addition : Tensor k → Tensor k → Tensor k
+| sub --Subtraction : Tensor k → Tensor k → Tensor k
+| mul --Pointwise Multiplication : Tensor k → Tensor k → Tensor k
+| div --Pointwise Division : Tensor k → Tensor k → Tensor k
+| sqr --Pointwise Squaring : Tensor k → Tensor k
+| sqrt --Pointwise Square Root : Tensor k → Tensor k
+| sum -- Add 'em up : Tensor k → Tensor (identity of tensor product)
+| mean -- Average 'em out : Tensor k → Tensor (identity of tensor product)
+| repeat_ -- Complicated
+| abs -- Pointwise
+| sgn -- Pointwise
+| neg -- Pointwise
+| step -- Pointwise fun x => if x < 0 then 0 else 1
+| relu -- Pointwise fun x => if x < 0 then 0 else x
+| gelu -- Pointwise fun x => x * 0.5 * (1 + erf(x/sqrt(2)))
+| silu -- Pointwise fun x => x * 1/ (1+exp(-x))
+| norm -- not the sqrt of sum of squares
+| rms_norm -- Don't know yet : Tensor k -> Tensor k rms(a) = sqrt(1/n * sum_i (a_i^2)), rms_norm i = a_i
+| mul_mat -- Matrix multiplication, undefined on stuff that isn't a matrix
+| scale -- Tensor 0 → Tensor k → Tensor k
+| cpy -- identity function
+| reshape -- Tensor → Shape → Tensor --Changes the data to fit new layout of same (linear algebra sense) dimension
+| view1D -- Tensor → (Num_elements : ℕ) → (offset : ℕ) → Tensor --Output at i = input at i+offset output
+| view 2D -- Number of elements in 2 axes and offsets in 2 axes
+| permute4D -- take a permutation of 4 numbers and Return a 4d tesnro with everything permuted
+| transpose -- Matrix transpose
+| get_rows -- (x : Matrix) (I : vector of Nats)  out(i,j) = x(I(i),j)
+| diag_mask_inf -- Take a matrix and set upper triangle to -infinity
+| soft_max -- Take a vector and exponentiate pointwise and normalize by L1-norm
+| rope -- Screwed up rotatory positional embedding
+| conv_1d_1s -- Polynomial multiplication of vectors
+| conv_1d_2s -- Convolve 1d 2d
+| flash_attn -- 3 input matrices Q K V, compute softmax (QKᵀ / sqrt(number of columns of q)) V
+| flash_ff -- TODO
 | count
 
 
