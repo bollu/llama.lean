@@ -106,7 +106,7 @@ inductive op
 | cpy -- identity function
 | reshape -- Tensor → Shape → Tensor --Changes the data to fit new layout of same (linear algebra sense) dimension
 | view1D -- Tensor → (Num_elements : ℕ) → (offset : ℕ) → Tensor --Output at i = input at i+offset output
-| view 2D -- Number of elements in 2 axes and offsets in 2 axes
+| view2D -- Number of elements in 2 axes and offsets in 2 axes
 | permute4D -- take a permutation of 4 numbers and Return a 4d tesnro with everything permuted
 | transpose -- Matrix transpose
 | get_rows -- (x : Matrix) (I : vector of Nats)  out(i,j) = x(I(i),j)
@@ -145,8 +145,9 @@ def op.marshal : op -> USize
 | scale => 21
 | cpy => 22
 | reshape => 23
-| view => 24
-| permute => 25
+| view1D => 24
+| view2D => 24
+| permute4D => 25
 | transpose => 26
 | get_rows => 27
 | diag_mask_inf => 28
