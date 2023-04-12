@@ -265,5 +265,5 @@ lean_object *lean_ggml_type_sizef(size_t type) {
 }
 
 size_t lean_ggml_element_size(lean_object *ctx, lean_object *a) {
-  return ggml_element_size((struct ggml_tensor *)a);
+  return ggml_element_size((const struct ggml_tensor *)a);
 }
