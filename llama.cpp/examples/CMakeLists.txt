@@ -29,6 +29,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 if (EMSCRIPTEN)
 else()
+    add_subdirectory(simple)
     add_subdirectory(main)
     add_subdirectory(quantize)
     add_subdirectory(quantize-stats)
