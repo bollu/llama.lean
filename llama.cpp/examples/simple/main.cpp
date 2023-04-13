@@ -81,9 +81,7 @@ int main(int argc, char ** argv) {
     fprintf(stderr, "%s: seed = %d\n", __func__, params.seed);
 
     std::mt19937 rng(params.seed);
-    if (params.random_prompt) {
-        params.prompt = gpt_random_prompt(rng);
-    }
+    params.prompt = "A Kahler manifold is ";
 
 
     llama_context * ctx;
@@ -126,20 +124,19 @@ int main(int argc, char ** argv) {
     fprintf(stderr, "sampling: temp = %f, top_k = %d, top_p = %f, repeat_last_n = %i, repeat_penalty = %f\n",
         params.temp, params.top_k, params.top_p, params.repeat_last_n, params.repeat_penalty);
     fprintf(stderr, "generate: n_ctx = %d, n_batch = %d, n_predict = %d, n_keep = %d\n", n_ctx, params.n_batch, params.n_predict, params.n_keep);
+    fprintf(stderr, "generate: prompt: '%s'\n", params.prompt.c_str());
     fprintf(stderr, "\n\n");
 
     // TODO: replace with ring-buffer
     std::vector<llama_token> last_n_tokens(n_ctx);
     std::fill(last_n_tokens.begin(), last_n_tokens.end(), 0);
 
-    bool input_noecho  = false;
-
     int n_past     = 0;
     int n_remain   = params.n_predict;
     int n_consumed = 0;
 
     // the first thing we will do is to output the prompt, so set color accordingly
-    set_console_color(con_st, CONSOLE_COLOR_PROMPT);
+    set_console_color(con_st, CONSOLE_COLOR_DEFAULT);
 
     std::vector<llama_token> embd;
 
@@ -148,6 +145,7 @@ int main(int argc, char ** argv) {
         if (embd.size() > 0) {
             // infinite text generation via context swapping
             // if we run out of context:
+            // @sid: By default, n_keep = 0
             // - take the n_keep first tokens from the original prompt (via n_past)
             // - take half of the last (n_ctx - n_keep) tokens and recompute the logits in a batch
             if (n_past + (int) embd.size() > n_ctx) {
@@ -168,7 +166,7 @@ int main(int argc, char ** argv) {
         n_past += embd.size();
         embd.clear();
 
-        if ((int) embd_inp.size() <= n_consumed && !is_interacting) {
+        if ((int) embd_inp.size() <= n_consumed) {
             // out of user input, sample next token
             const int32_t top_k          = params.top_k;
             const float   top_p          = params.top_p;
@@ -196,8 +194,6 @@ int main(int argc, char ** argv) {
             // add it to the context
             embd.push_back(id);
 
-            // echo this to console
-            input_noecho = false;
 
             // decrement remaining sampling budget
             --n_remain;
@@ -215,26 +211,16 @@ int main(int argc, char ** argv) {
         }
 
         // display text
-        if (!input_noecho) {
-            for (auto id : embd) {
-                printf("%s", llama_token_to_str(ctx, id));
-            }
-            fflush(stdout);
+        for (auto id : embd) {
+            printf("%s", llama_token_to_str(ctx, id));
         }
-        // reset color to default if we there is no pending user input
-        if (!input_noecho && (int)embd_inp.size() == n_consumed) {
-            set_console_color(con_st, CONSOLE_COLOR_DEFAULT);
-        }
+        fflush(stdout);
 
 
         // end of text token
         if (!embd.empty() && embd.back() == llama_token_eos()) {
-            if (params.instruct) {
-                is_interacting = true;
-            } else {
-                fprintf(stderr, " [end of text]\n");
-                break;
-            }
+            fprintf(stderr, " [end of text]\n");
+            break;
         }
 
     }
