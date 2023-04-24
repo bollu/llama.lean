@@ -108,7 +108,7 @@ int main(int argc, char ** argv) {
     params.prompt.insert(0, 1, ' ');
 
     // tokenize the prompt
-    auto embd_inp = ::llama_tokenize(ctx, params.prompt, true);
+    const std::vector<llama_token> embd_inp = ::llama_tokenize(ctx, params.prompt, true);
 
     const int n_ctx = llama_n_ctx(ctx);
 
