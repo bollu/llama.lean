@@ -481,11 +481,56 @@ def llama : Cmd := `[Cli|
 
 ]
 
+abbrev Token := UInt64
+
 open ggml in
+
+def sample (embd : Array Token) (last_n_tokens : Array Token) : IO (Array Toke \times Array Token) := do
+ sorry
+
 def main (args : List String) : IO UInt32 := do
+  let modelpath := args[0]!
+  let prompt := args[1]!
+  let NPREDICT := 256
+  let N_THREADS := 8
+
   -- llama.validate args
-  let ctx <- ggml_init (1024 * 1024 * 1024)
-  let t0 <- ggml_new_tensor_1d ctx type.i32 10
+  let lparams <- llama_context_default_params()
+  let ctx <- llama_init_from_file params.model lparams
+  let prompt := " " ++ prompt
+  let mut embd_inp : Array Token <- llama_tokenize ctx prompt true
+  let NCTX <- llama_n_ctx ctx
+
+  let last_n_tokens : Array Token <- Array.repeat NCTX 0
+  let mut past_ctx_len : Int := 0
+  let mut n_remain : Int := NPREDICT
+  let embd : Array Token
+
+  while n_remain /= 0 do
+    if not embd.empty? then do
+      if past_ctx_len + embd.length > N_CTX {
+        embd := last_n_tokens.take_from_end (past_ctx_len / 2)
+        past_ctx_len := 0
+      }
+      llama_eval ctx embd embd.length past_ctx_len N_THREADS
+      past_ctx_len += embd.length
+      embd := #[]
+      if embd_inp.empty? then
+        (embd, last_n_tokens) <- sample embd last_n_tokens
+        n_remain := n_remain - 1
+    else
+      while not empd_inp.empty? do
+        last_n_tokens := last_n_tokens.pop_front.push_back embd_inp[0]!
+        embd := embd.push_back embd_inp[0]!
+        embd_inp := embd_inp.drop 1
+        if embd.length >= N_BATCH
+          break
+    for e in embd
+      IO.putStr (<- llama_token_to_str ctx e)
+
+    if not e.empty? and e.last! == (<- llama_token_eos) then
+      break
+
   ggml_print_objects ctx
   ggml_free ctx
   return 0
