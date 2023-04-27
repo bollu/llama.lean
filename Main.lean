@@ -5,10 +5,7 @@ import Std
 
 open Cli
 open Std
-
 section Util
-
-
 namespace ggml
 -- bindings to the GGML library
 
@@ -393,34 +390,9 @@ structure gptvocab where
 -- TODO: do I need 'int32'?
 abbrev gptvocab.id : Type := UInt32
 
-def gptvocab.gpt_tokenize (vocab: gptvocab) (text: String): Array gptvocab := sorry
-
--- sentencepiece tokenization.
-def gptvocab.llama_tokenize (vocab: gptvocab) (text: String) (bos: Bool): Array gptvocab := sorry
-
--- load the tokens from encoder.json
-def gptvocab.init (fname : String): Option gptvocab := sorry
-
 -- random generation monad.
 abbrev LlamaM := ReaderT GptParams IO
 
-
--- sample next token given probabilities for each embedding
--- - consider only the top K tokens
--- - from them, consider only the top tokens with cumulative probability > P
-def gptvocab.llama_sample_top_p_top_k (vocab: gptvocab) (logits: Array Float)
-  (lastNTokens: Array gptvocab.id)
-  -- (repeatPenalty : Double)
-  -- (topK : Nat)
-  -- (topP : Double)
-  -- (temp : Double)
-  : LlamaM gptvocab.id := sorry
-
--- filter to top K tokens from list of logits
-def gptvocab.sample_top_k (vocab: gptvocab)
-  (logitsId : Array (Float × gptvocab.id))
-  -- (topK: Nat)
-  : LlamaM gptvocab.id := sorry
 end Util
 
 
@@ -485,53 +457,91 @@ abbrev Token := UInt64
 
 open ggml in
 
-def sample (embd : Array Token) (last_n_tokens : Array Token) : IO (Array Toke \times Array Token) := do
+def sample (embd : Array Token) (last_n_tokens : Array Token) : 
+  IO (Array Token × Array Token) := do
  sorry
+
+opaque LLamaParams : Type
+opaque LLamaCtx : Type 
+
+def llama_context_default_params : IO LlamaParams := sorry 
+
+def llama_init_from_file (modelpath : String) (params : LlamaParams) :
+  IO LLamaCtx := sorry
+
+def llama_eval (ctx : LLamaCtx) (embd : Array token) (past_ctx_len : Nat) (N_THREADS:  Nat) : IO Unit := sorry 
+
+def llama_tokenize (ctx : LLamaCtx) (prompt : String) (whatIsThisBool : Bool) : IO (Array Token) := sorry 
+
+def llama_n_ctx (ctx : LlamaCtx) : IO Nat := sorry 
+
+def llama_token_to_str (ctx : LlamaCtx) (token : Llamatoken) : IO String  := sorry
+
+def llama_token_eos : IO Token := sorry
+
+def Array.replicate (len : Nat) (val : α) : Array α := 
+  (List.replicate len val).toArray
+
+def Array.take_from_end (len : Nat) (arr : Array α) : Array α := 
+  arr[arr.size-len:]
+
+def Array.drop (arr : Array α) (len : Nat): Array α := 
+  arr[len:]
+
+def Array.pop_front (arr : Array α) : Array α := 
+  arr[1:]
+
+def Array.push_back (arr : Array α) (val : α) : Array α := 
+  arr.push val
+
+def Array.last [Inhabited α] (arr : Array α) :  α := 
+  arr[arr.size-1]!
 
 def main (args : List String) : IO UInt32 := do
   let modelpath := args[0]!
   let prompt := args[1]!
   let NPREDICT := 256
   let N_THREADS := 8
+  let N_BATCH := 512
 
   -- llama.validate args
-  let lparams <- llama_context_default_params()
-  let ctx <- llama_init_from_file params.model lparams
+  let lparams : LLamaParams ← llama_context_default_params
+  let ctx ← llama_init_from_file modelpath lparams
   let prompt := " " ++ prompt
-  let mut embd_inp : Array Token <- llama_tokenize ctx prompt true
-  let NCTX <- llama_n_ctx ctx
+  let mut embd_inp : Array Token ← llama_tokenize ctx prompt true
+  let NCTX ← llama_n_ctx ctx
 
-  let last_n_tokens : Array Token <- Array.repeat NCTX 0
-  let mut past_ctx_len : Int := 0
+  let mut last_n_tokens : Array Token := Array.replicate (len := NCTX) 0
+  let mut past_ctx_len : Nat := 0
   let mut n_remain : Int := NPREDICT
-  let embd : Array Token
+  let mut embd : Array Token := #[]
 
-  while n_remain /= 0 do
-    if not embd.empty? then do
-      if past_ctx_len + embd.length > N_CTX {
+  while n_remain != 0 do
+    if not embd.isEmpty then do
+      if past_ctx_len + embd.size > NCTX then
         embd := last_n_tokens.take_from_end (past_ctx_len / 2)
         past_ctx_len := 0
-      }
-      llama_eval ctx embd embd.length past_ctx_len N_THREADS
-      past_ctx_len += embd.length
-      embd := #[]
-      if embd_inp.empty? then
-        (embd, last_n_tokens) <- sample embd last_n_tokens
+      llama_eval ctx embd past_ctx_len N_THREADS
+      past_ctx_len := past_ctx_len + embd.size
+      if embd_inp.isEmpty then
+        let (embd', last_n_tokens') ← sample embd last_n_tokens
+        embd := embd'
+        last_n_tokens := last_n_tokens'
         n_remain := n_remain - 1
     else
-      while not empd_inp.empty? do
+      while !embd_inp.isEmpty do
         last_n_tokens := last_n_tokens.pop_front.push_back embd_inp[0]!
         embd := embd.push_back embd_inp[0]!
         embd_inp := embd_inp.drop 1
-        if embd.length >= N_BATCH
+        if embd.size >= N_BATCH then
           break
-    for e in embd
-      IO.putStr (<- llama_token_to_str ctx e)
-
-    if not e.empty? and e.last! == (<- llama_token_eos) then
+    for e in embd do
+      IO.print (← llama_token_to_str ctx e)
+    
+    if not embd.isEmpty && embd.last == (← llama_token_eos) then
       break
 
-  ggml_print_objects ctx
-  ggml_free ctx
+  -- ggml_print_objects ctx
+  -- ggml_free ctx
   return 0
 end Main
