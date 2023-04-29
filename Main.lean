@@ -457,44 +457,50 @@ abbrev Token := UInt64
 
 open ggml in
 
-def sample (embd : Array Token) (last_n_tokens : Array Token) : 
+def sample (embd : Array Token) (last_n_tokens : Array Token) :
   IO (Array Token × Array Token) := do
  sorry
 
 opaque LLamaParams : Type
-opaque LLamaCtx : Type 
+opaque LLamaCtx : Type
 
-def llama_context_default_params : IO LlamaParams := sorry 
+def llama_context_default_params : IO LlamaParams := sorry
 
 def llama_init_from_file (modelpath : String) (params : LlamaParams) :
   IO LLamaCtx := sorry
 
-def llama_eval (ctx : LLamaCtx) (embd : Array token) (past_ctx_len : Nat) (N_THREADS:  Nat) : IO Unit := sorry 
+def llama_eval (ctx : LLamaCtx) (embd : Array token) (past_ctx_len : Nat) (N_THREADS:  Nat) : IO Unit := sorry
 
-def llama_tokenize (ctx : LLamaCtx) (prompt : String) (whatIsThisBool : Bool) : IO (Array Token) := sorry 
+def llama_tokenize (ctx : LLamaCtx) (prompt : String) (whatIsThisBool : Bool) : IO (Array Token) := sorry
 
-def llama_n_ctx (ctx : LlamaCtx) : IO Nat := sorry 
+def llama_n_ctx (ctx : LlamaCtx) : IO Nat := sorry
 
 def llama_token_to_str (ctx : LlamaCtx) (token : Llamatoken) : IO String  := sorry
 
 def llama_token_eos : IO Token := sorry
 
-def Array.replicate (len : Nat) (val : α) : Array α := 
+def llama_get_logits (ctx : LlamaCtx) : IO (Array Token) := sorry
+
+def llama_sample_top_p_top_k (ctx : LlamaCtx) (last_n_tokens : Array Token)
+  (n_ctx : Int)  (repeat_last_n : Int) (top_k : Int) (top_p : Float)
+  (temp : Float) (repeat_penalty : Float) : IO Token := sorry
+
+def Array.replicate (len : Nat) (val : α) : Array α :=
   (List.replicate len val).toArray
 
-def Array.take_from_end (len : Nat) (arr : Array α) : Array α := 
+def Array.take_from_end (len : Nat) (arr : Array α) : Array α :=
   arr[arr.size-len:]
 
-def Array.drop (arr : Array α) (len : Nat): Array α := 
+def Array.drop (arr : Array α) (len : Nat): Array α :=
   arr[len:]
 
-def Array.pop_front (arr : Array α) : Array α := 
+def Array.pop_front (arr : Array α) : Array α :=
   arr[1:]
 
-def Array.push_back (arr : Array α) (val : α) : Array α := 
+def Array.push_back (arr : Array α) (val : α) : Array α :=
   arr.push val
 
-def Array.last [Inhabited α] (arr : Array α) :  α := 
+def Array.last [Inhabited α] (arr : Array α) :  α :=
   arr[arr.size-1]!
 
 def main (args : List String) : IO UInt32 := do
@@ -503,6 +509,12 @@ def main (args : List String) : IO UInt32 := do
   let NPREDICT := 256
   let N_THREADS := 8
   let N_BATCH := 512
+  let TOP_K : Int := 10
+  let TOP_P : Float := 1.0
+  let TEMP : Float := 2.0
+  let REPEAT_PENALTY : Float := 2.0
+  let REPEAT_LAST_N : Int := 0
+
 
   -- llama.validate args
   let lparams : LLamaParams ← llama_context_default_params
@@ -523,12 +535,21 @@ def main (args : List String) : IO UInt32 := do
         past_ctx_len := 0
       llama_eval ctx embd past_ctx_len N_THREADS
       past_ctx_len := past_ctx_len + embd.size
-      if embd_inp.isEmpty then
+      if not embd_inp.isEmpty then
+        let logits <- llama_get_logits ctx
+        -- id = llama_sample_top_p_top_k(ctx,
+        --         last_n_tokens.data() + N_CTX - params.repeat_last_n,
+        --         params.repeat_last_n, top_k, top_p, temp, repeat_penalty);
+        let id <- llama_sample_top_p_top_k ctx last_n_tokens NCTX REPEAT_LAST_N TOP_K TOP_P TEMP REPEAT_PENALTY
+        last_n_tokens := last_n_tokens.pop_front.push_back id
+        embd := embd.push_back id
+        n_remain := n_remain - 1
+      else -- embd_inp.isEmpty
         let (embd', last_n_tokens') ← sample embd last_n_tokens
         embd := embd'
         last_n_tokens := last_n_tokens'
         n_remain := n_remain - 1
-    else
+    else -- !embd.isEmpty
       while !embd_inp.isEmpty do
         last_n_tokens := last_n_tokens.pop_front.push_back embd_inp[0]!
         embd := embd.push_back embd_inp[0]!
@@ -537,7 +558,7 @@ def main (args : List String) : IO UInt32 := do
           break
     for e in embd do
       IO.print (← llama_token_to_str ctx e)
-    
+
     if not embd.isEmpty && embd.last == (← llama_token_eos) then
       break
 
